@@ -26,10 +26,32 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {
     
-        let image = info[UIImagePickerControllerOriginalImage]
-        imageView.image = image as? UIImage
-        
+        let userPickedimage = info[UIImagePickerControllerOriginalImage] as? UIImage
+        imageView.image = userPickedimage
+        guard let ciImage = CIImage(image: userPickedimage!) else
+        {
+            fatalError("failed to create ciImage")
+        }
+        detect(image: ciImage)
         imagePicker.dismiss(animated: true, completion: nil)
+    }
+    
+    func detect(image : CIImage)
+    {
+        guard let model = try? VNCoreMLModel(for: Inceptionv3().model) else
+        {
+            fatalError("Failed to covert ML model")
+        }
+        
+        var request = VNCoreMLRequest(model: model) { (request, error) in
+            guard let results = request.results as? [VNClassificationObservation] else
+            {
+                fatalError("Failed to cast to VNClassificationObservation")
+            }
+            print(results)
+        }
+        
+        
     }
 
     @IBAction func cameraTapped(_ sender: UIBarButtonItem) {
