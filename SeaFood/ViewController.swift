@@ -32,8 +32,10 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         {
             fatalError("failed to create ciImage")
         }
-        detect(image: ciImage)
-        imagePicker.dismiss(animated: true, completion: nil)
+        
+        imagePicker.dismiss(animated: true) {
+            self.detect(image: ciImage)
+        }
     }
     
     func detect(image : CIImage)
@@ -43,15 +45,41 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             fatalError("Failed to covert ML model")
         }
         
-        var request = VNCoreMLRequest(model: model) { (request, error) in
+        let request = VNCoreMLRequest(model: model) { (request, error) in
             guard let results = request.results as? [VNClassificationObservation] else
             {
                 fatalError("Failed to cast to VNClassificationObservation")
             }
+            
             print(results)
+            
+           
+            self.ShowMessage(title: "I see a...", message: results[0].identifier, controller: self)
         }
         
+        let handler = VNImageRequestHandler(ciImage: image)
+        do
+        {
+            try handler.perform([request])
+        }
+        catch
+        {
+            print("\(error)")
+        }
         
+    }
+    
+    func ShowMessage(title: String, message : String, controller : UIViewController)
+    {
+        let cancelText = NSLocalizedString("Cancel", comment: "")
+        
+        let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        
+        let cancelAction = UIAlertAction(title: cancelText, style: .cancel, handler: nil)
+        
+        alertController.addAction(cancelAction)
+        
+        controller.present(alertController, animated: true, completion: nil)
     }
 
     @IBAction func cameraTapped(_ sender: UIBarButtonItem) {
